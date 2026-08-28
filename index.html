@@ -11,11 +11,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     
     <style>
+        html, body {
+            overflow-x: hidden;
+            width: 100vw;
+            max-width: 100vw;
+            position: relative;
+        }
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: #FDF9F7;
             color: #4A2B29;
-            overflow-x: hidden;
             margin: 0;
             padding: 0;
         }
@@ -286,7 +291,7 @@
     </section>
 
     <!-- Section 2: A New Chapter -->
-    <section class="min-h-screen relative flex items-center justify-center py-24 px-6" id="sec-2">
+    <section class="min-h-screen relative flex items-center justify-center py-24 px-6 overflow-hidden" id="sec-2">
         <div class="max-w-7xl w-full flex flex-col items-center justify-center relative z-10 min-h-[70vh]">
             <div class="absolute inset-0 flex justify-center items-center opacity-20 pointer-events-none gsap-fade-up">
                 <h3 class="font-script text-[15rem] md:text-[25rem] text-pink-300 leading-none text-center transform scale-150 whitespace-nowrap">
@@ -308,7 +313,7 @@
     </section>
 
     <!-- Section 3: Save the Date -->
-    <section class="min-h-screen relative flex items-center justify-center py-24 px-6 bg-white/30" id="sec-3">
+    <section class="min-h-screen relative flex items-center justify-center py-24 px-6 bg-white/30 overflow-hidden" id="sec-3">
         <div class="max-w-7xl w-full flex flex-col-reverse md:flex-row items-center gap-12 md:gap-20 z-10">
             <div class="w-full md:w-1/2 flex justify-center gsap-fade-right float-img-2">
                 <div class="w-full max-w-[20rem] md:max-w-md aspect-square arch-mask border-[12px] border-white shadow-2xl relative overflow-hidden" data-tilt data-tilt-gyroscope="false" data-tilt-max="3" data-tilt-speed="500">
@@ -342,7 +347,7 @@
     </section>
 
     <!-- Section 4: Venue -->
-    <section class="min-h-screen relative flex flex-col items-center justify-center py-24 px-6" id="sec-4">
+    <section class="min-h-screen relative flex flex-col items-center justify-center py-24 px-6 overflow-hidden" id="sec-4">
         <div class="text-center mb-16 gsap-fade-up z-10">
             <h2 class="font-script text-6xl md:text-8xl text-maroon mb-4">The Venue</h2>
             <p class="font-serif tracking-[0.3em] text-sm text-gold uppercase font-bold">Celebration Location</p>
