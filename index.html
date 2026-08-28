@@ -281,12 +281,12 @@
                 <div class="w-4 h-4 rotate-45 bg-maroon"></div>
                 <div class="w-16 md:w-32 h-[2px] bg-gradient-to-l from-transparent to-gold"></div>
             </div>
-        </div>
 
-        <!-- Scroll Down Indicator -->
-        <div id="scroll-indicator" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 z-20 animate-bounce pointer-events-none">
-            <span class="text-maroon text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-1">Scroll</span>
-            <svg class="w-5 h-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            <!-- Scroll Down Indicator -->
+            <div id="scroll-indicator" class="flex flex-col items-center opacity-0 mt-8 animate-bounce pointer-events-none">
+                <span class="text-maroon text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-1">Scroll</span>
+                <svg class="w-5 h-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
         </div>
     </section>
 
@@ -347,11 +347,12 @@
     </section>
 
     <!-- Section 4: Venue -->
-    <section class="min-h-screen relative flex flex-col items-center justify-center py-24 px-6 overflow-hidden" id="sec-4">
-        <div class="text-center mb-16 gsap-fade-up z-10">
+    <section class="relative flex flex-col items-center justify-center py-20 px-6 overflow-hidden" id="sec-4">
+        <div class="text-center mb-12 gsap-fade-up z-10">
             <h2 class="font-script text-6xl md:text-8xl text-maroon mb-4">The Venue</h2>
             <p class="font-serif tracking-[0.3em] text-sm text-gold uppercase font-bold">Celebration Location</p>
         </div>
+        
         <div class="max-w-7xl w-full grid grid-cols-1 md:grid-cols-12 gap-12 items-center z-10">
             
             <div class="col-span-1 md:col-span-6 relative flex justify-center md:justify-end gsap-fade-right float-img-1">
@@ -479,9 +480,7 @@
         window.addEventListener('touchstart', startAudioOnInteraction, { once: true });
         window.addEventListener('scroll', startAudioOnInteraction, { once: true });
         window.addEventListener('keydown', startAudioOnInteraction, { once: true });
-        window.addEventListener('wheel', startAudioOnInteraction, { once: true });
         window.addEventListener('pointerdown', startAudioOnInteraction, { once: true });
-        window.addEventListener('mousemove', startAudioOnInteraction, { once: true });
 
         // --- VISUALS ---
         const petalsContainer = document.getElementById('petals-container');
