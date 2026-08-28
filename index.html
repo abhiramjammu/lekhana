@@ -263,6 +263,12 @@
                 <div class="w-16 md:w-32 h-[2px] bg-gradient-to-l from-transparent to-gold"></div>
             </div>
         </div>
+
+        <!-- Scroll Down Indicator -->
+        <div id="scroll-indicator" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0 z-20 animate-bounce pointer-events-none">
+            <span class="text-maroon text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-1">Scroll</span>
+            <svg class="w-5 h-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
     </section>
 
     <!-- Section 2: A New Chapter -->
@@ -472,19 +478,20 @@
         }
 
         // --- AUTOMATIC HERO ANIMATION ---
-        const heroTl = gsap.timeline({ delay: 1 });
+        const heroTl = gsap.timeline({ delay: 0.2 });
         
         heroTl.to("#gate-left", { x: "-100%", duration: 1.5, ease: "power2.inOut" }, 0)
               .to("#gate-right", { x: "100%", duration: 1.5, ease: "power2.inOut" }, 0)
               .to(".gsap-hero-card", { opacity: 1, y: -20, duration: 1, ease: "power1.out" }, 0.5)
               .fromTo(".handwriting-name", 
                   { clipPath: "inset(0 100% 0 0)" }, 
-                  { clipPath: "inset(0 0% 0 0)", duration: 2.5, ease: "power2.inOut" }, 1);
+                  { clipPath: "inset(0 0% 0 0)", duration: 2.5, ease: "power2.inOut" }, 1)
+              .to("#scroll-indicator", { opacity: 0.7, duration: 1 }, 2);
 
         setTimeout(() => {
             document.getElementById('gate-left').style.display = 'none';
             document.getElementById('gate-right').style.display = 'none';
-        }, 3000);
+        }, 2000);
 
         // 3D Flip Animation
         gsap.set(".digit-1, .digit-2", { rotationX: -180, opacity: 0 });
