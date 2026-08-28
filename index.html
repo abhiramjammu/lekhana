@@ -305,8 +305,8 @@
                         The sacred Half Saree ceremony. A day filled with love, blessings, and the timeless elegance of our heritage.
                     </p>
                 </div>
-                <div class="ethereal-frame w-full max-w-[22rem] md:max-w-md aspect-[4/5] gsap-fade-up float-img-1 ml-auto mr-auto md:mr-12" data-tilt data-tilt-gyroscope="false" data-tilt-max="5" data-tilt-speed="400">
-                    <img src="photo1.jpg" alt="Lekhhana Portrait" class="object-cover object-top hover:scale-110 transition-transform duration-1000">
+                <div class="bg-white p-3 pb-12 md:p-5 md:pb-20 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500 w-full max-w-[18rem] md:max-w-[22rem] gsap-fade-up float-img-1 ml-auto mr-auto md:mr-12" data-tilt data-tilt-gyroscope="false" data-tilt-max="5" data-tilt-speed="400">
+                    <img src="photo1.jpg" alt="Lekhhana Portrait" class="w-full aspect-[3/4] object-cover border border-gray-200">
                 </div>
             </div>
         </div>
@@ -478,6 +478,10 @@
         window.addEventListener('click', startAudioOnInteraction, { once: true });
         window.addEventListener('touchstart', startAudioOnInteraction, { once: true });
         window.addEventListener('scroll', startAudioOnInteraction, { once: true });
+        window.addEventListener('keydown', startAudioOnInteraction, { once: true });
+        window.addEventListener('wheel', startAudioOnInteraction, { once: true });
+        window.addEventListener('pointerdown', startAudioOnInteraction, { once: true });
+        window.addEventListener('mousemove', startAudioOnInteraction, { once: true });
 
         // --- VISUALS ---
         const petalsContainer = document.getElementById('petals-container');
