@@ -401,119 +401,71 @@
     <script>
         gsap.registerPlugin(ScrollTrigger);
 
-        // --- AUDIO LOGIC (Robust Web Audio API) ---
+        // --- AUDIO LOGIC (Muted Autoplay Hack) ---
         const musicBtn = document.getElementById('music-btn');
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioBuffer;
-        let sourceNode;
-        let gainNode;
-        let audioStarted = false;
-        let isPlaying = false;
-        let pendingPlay = false;
         
-        let startOffset = 52; 
-        let currentPlaybackTime = 52;
-        let lastStartTime = 0;
+        // 1. Create a hidden audio element that autoplays muted
+        const audioEl = document.createElement('audio');
+        audioEl.src = 'audio.mp3';
+        audioEl.loop = true;
+        audioEl.muted = true;
+        audioEl.autoplay = true;
+        audioEl.crossOrigin = "anonymous";
+        document.body.appendChild(audioEl);
 
-        // Fetch and decode the audio file in background
-        async function loadAudio() {
-            try {
-                const response = await fetch('audio.mp3');
-                const arrayBuffer = await response.arrayBuffer();
-                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                if (pendingPlay) {
-                    playAudioBuffer();
-                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
-                }
-            } catch (err) {
-                console.error("Failed to load audio:", err);
+        let audioContext;
+        let gainNode;
+        let isAudioUnlocked = false;
+        
+        // Attempt to start muted playback immediately
+        audioEl.play().catch(e => console.log("Autoplay blocked initially"));
+
+        function unlockAudioOnScroll() {
+            if (isAudioUnlocked) return;
+
+            // 2. On first scroll/touch, create the AudioContext to control volume
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaElementSource(audioEl);
+                gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.3; // Force 30% volume
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
             }
-        }
-        loadAudio();
 
-        function playAudioBuffer() {
-            if (!audioContext || !audioBuffer) return;
-            if (audioContext.state === 'suspended') audioContext.resume();
-
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = audioBuffer;
+            // 3. Unmute the HTML element and resume the Web Audio Context
+            audioEl.muted = false;
             
-            gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.3; 
-
-            sourceNode.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            sourceNode.start(0, currentPlaybackTime);
-            lastStartTime = audioContext.currentTime;
-            isPlaying = true;
-            
-            sourceNode.onended = () => {
-                if (isPlaying) {
-                    currentPlaybackTime = 52;
-                    playAudioBuffer();
-                }
-            };
-        }
-
-        function stopAudioBuffer() {
-            if (sourceNode && isPlaying) {
-                isPlaying = false;
-                sourceNode.onended = null;
-                sourceNode.stop();
-                currentPlaybackTime += (audioContext.currentTime - lastStartTime);
-            }
-        }
-
-        function toggleAudio() {
-            if(isPlaying) {
-                stopAudioBuffer();
-                musicBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Paused';
-            } else {
-                if (audioContext.state === 'suspended') audioContext.resume();
-                if (audioBuffer) {
-                    playAudioBuffer();
-                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
-                }
-                audioStarted = true;
-            }
-        }
-
-        function startAudioOnInteraction() {
-            if (audioStarted) return;
-            
-            if (audioContext && audioContext.state === 'suspended') {
-                // Must handle as a promise!
+            if (audioContext.state === 'suspended') {
                 audioContext.resume().then(() => {
-                    if (audioContext.state === 'running' && !audioStarted) {
-                        audioStarted = true;
-                        if (audioBuffer) {
-                            playAudioBuffer();
-                            musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
-                        } else {
-                            pendingPlay = true;
-                            musicBtn.innerHTML = '<svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Loading...';
-                        }
+                    if (audioContext.state === 'running') {
+                        isAudioUnlocked = true;
+                        musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
                         
-                        ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
-                            window.removeEventListener(evt, startAudioOnInteraction);
+                        // Remove triggers once successfully unlocked
+                        ['scroll', 'touchmove', 'touchstart', 'click', 'keydown'].forEach(evt => {
+                            window.removeEventListener(evt, unlockAudioOnScroll);
                         });
                     }
-                }).catch(err => console.log("Browser blocked audio unlock on this gesture."));
-            } else if (audioContext && audioContext.state === 'running' && !audioStarted) {
-                // If it was already running for some reason
-                audioStarted = true;
-                if (audioBuffer) playAudioBuffer();
-                
-                ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
-                    window.removeEventListener(evt, startAudioOnInteraction);
-                });
+                }).catch(e => console.log("iOS blocked resume on scroll"));
             }
         }
 
-        ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
-            window.addEventListener(evt, startAudioOnInteraction, { passive: true });
+        // 4. Listen for literal SCROLL and TOUCH events to attempt the unmute
+        ['scroll', 'touchmove', 'touchstart', 'click', 'keydown'].forEach(evt => {
+            window.addEventListener(evt, unlockAudioOnScroll, { passive: true });
         });
+
+        function toggleAudio() {
+            if(isAudioUnlocked && !audioEl.paused) {
+                audioEl.pause();
+                musicBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Paused';
+            } else {
+                unlockAudioOnScroll();
+                audioEl.play();
+                musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+            }
+        }
 
         // --- VISUALS ---
         const petalsContainer = document.getElementById('petals-container');
