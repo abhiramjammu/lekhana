@@ -480,28 +480,39 @@
         }
 
         function startAudioOnInteraction() {
+            if (audioStarted) return;
+            
             if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            // Check if context is successfully running before declaring success
-            if (audioContext && audioContext.state === 'running' && !audioStarted) {
+                // Must handle as a promise!
+                audioContext.resume().then(() => {
+                    if (audioContext.state === 'running' && !audioStarted) {
+                        audioStarted = true;
+                        if (audioBuffer) {
+                            playAudioBuffer();
+                            musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                        } else {
+                            pendingPlay = true;
+                            musicBtn.innerHTML = '<svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Loading...';
+                        }
+                        
+                        ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
+                            window.removeEventListener(evt, startAudioOnInteraction);
+                        });
+                    }
+                }).catch(err => console.log("Browser blocked audio unlock on this gesture."));
+            } else if (audioContext && audioContext.state === 'running' && !audioStarted) {
+                // If it was already running for some reason
                 audioStarted = true;
-                if (audioBuffer) {
-                    playAudioBuffer();
-                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
-                } else {
-                    pendingPlay = true;
-                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Loading...';
-                }
+                if (audioBuffer) playAudioBuffer();
                 
-                ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'].forEach(evt => {
+                ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
                     window.removeEventListener(evt, startAudioOnInteraction);
                 });
             }
         }
 
-        ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'].forEach(evt => {
-            window.addEventListener(evt, startAudioOnInteraction);
+        ['click', 'touchstart', 'touchend', 'scroll', 'keydown', 'pointerdown', 'pointerup'].forEach(evt => {
+            window.addEventListener(evt, startAudioOnInteraction, { passive: true });
         });
 
         // --- VISUALS ---
