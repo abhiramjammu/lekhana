@@ -751,8 +751,8 @@
         window.addEventListener('touchstart', () => isUserHolding = true, {passive: true});
         window.addEventListener('touchend', () => isUserHolding = false, {passive: true});
         
-        // Start auto-scroll 3.5 seconds after page load
-        setTimeout(startAutoScroll, 3500);
+        // Start auto-scroll ONLY after user unlocks (handled in handleUnlock)
+        // setTimeout(startAutoScroll, 3500);
 
     </script>
 </body>
