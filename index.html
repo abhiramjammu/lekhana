@@ -631,15 +631,15 @@
                         
                         readingPanels.forEach(p => {
                             const rect = p.getBoundingClientRect();
-                            // Expand the "reading zone" vertically by 150px so it slows down right before they read
-                            if (centerY >= rect.top - 150 && centerY <= rect.bottom + 150) {
+                            // Only slow down when the absolute center of the screen is directly over a panel
+                            if (centerY >= rect.top - 20 && centerY <= rect.bottom + 20) {
                                 isOverPanel = true;
                             }
                         });
                         
-                        // Zip fast if there is nothing to read!
+                        // Zip ultra-fast when going to another panel!
                         if (!isOverPanel) {
-                            speed = 4.5; 
+                            speed = 6.0; 
                         }
                         
                         window.scrollBy(0, speed);
