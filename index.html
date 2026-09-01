@@ -597,6 +597,7 @@
             
             // Release scroll lock
             document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
             
             startAudioOnInteraction();
             
@@ -610,6 +611,13 @@
             
             setTimeout(startAutoScroll, 3500);
         }
+
+        // BRUTE FORCE SCROLL LOCK FOR iOS SAFARI
+        window.addEventListener('scroll', () => {
+            if (!hasUnlocked) {
+                window.scrollTo(0, 0);
+            }
+        });
 
         // Tap Button
         tapBtn.addEventListener('click', handleUnlock);
@@ -678,7 +686,7 @@
             gsap.from(el, { x: 60, opacity: 0, duration: 1.2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 75%" } });
         });
 
-        const fadeUpElements = document.querySelectorAll('.gsap-fade-up');
+        const fadeUpElements = document.querySelectorAll('.fade-up');
         fadeUpElements.forEach(el => {
             gsap.from(el, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%" } });
         });
@@ -716,8 +724,8 @@
                         
                         readingPanels.forEach(p => {
                             const rect = p.getBoundingClientRect();
-                            // Only slow down when the absolute center of the screen is directly over a panel
-                            if (centerY >= rect.top - 20 && centerY <= rect.bottom + 20) {
+                            // Expanded by 60px to give breathing room before slowing down!
+                            if (centerY >= rect.top - 60 && centerY <= rect.bottom + 60) {
                                 isOverPanel = true;
                             }
                         });
