@@ -438,25 +438,36 @@
 
         function playAudioBuffer() {
             if (!audioContext || !audioBuffer) return;
-            if (audioContext.state === 'suspended') audioContext.resume();
+            
+            if (audioContext.state === 'suspended') {
+                // Force iOS unlock synchronously
+                const osc = audioContext.createOscillator();
+                const dummyGain = audioContext.createGain();
+                dummyGain.gain.value = 0;
+                osc.connect(dummyGain);
+                dummyGain.connect(audioContext.destination);
+                osc.start(0);
+                osc.stop(audioContext.currentTime + 0.01);
+                
+                audioContext.resume();
+            }
 
             sourceNode = audioContext.createBufferSource();
             sourceNode.buffer = audioBuffer;
             
             gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.45; // Increased to 45% for phone speakers
+            gainNode.gain.value = 0.45; // 45% volume
 
             sourceNode.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
-            sourceNode.start(0, currentPlaybackTime);
-            lastStartTime = audioContext.currentTime;
+            // ALWAYS start exactly at 52 seconds, every time.
+            sourceNode.start(0, 52);
             isPlaying = true;
             
             sourceNode.onended = () => {
                 if (isPlaying) {
-                    currentPlaybackTime = 52;
-                    playAudioBuffer();
+                    playAudioBuffer(); // Loop back to 52 seconds naturally
                 }
             };
         }
@@ -466,7 +477,6 @@
                 isPlaying = false;
                 sourceNode.onended = null;
                 sourceNode.stop();
-                currentPlaybackTime += (audioContext.currentTime - lastStartTime);
             }
         }
 
@@ -475,7 +485,6 @@
                 stopAudioBuffer();
                 musicBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Paused';
             } else {
-                if (audioContext.state === 'suspended') audioContext.resume();
                 if (audioBuffer) {
                     playAudioBuffer();
                     musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
@@ -488,16 +497,16 @@
             if (audioStarted) return;
             
             if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                    // Force iOS to fully unlock by playing a silent dummy sound instantly
-                    const osc = audioContext.createOscillator();
-                    const dummyGain = audioContext.createGain();
-                    dummyGain.gain.value = 0;
-                    osc.connect(dummyGain);
-                    dummyGain.connect(audioContext.destination);
-                    osc.start(0);
-                    osc.stop(audioContext.currentTime + 0.01);
+                // Play dummy sound immediately in the call stack to satisfy Apple's strict gesture check
+                const osc = audioContext.createOscillator();
+                const dummyGain = audioContext.createGain();
+                dummyGain.gain.value = 0;
+                osc.connect(dummyGain);
+                dummyGain.connect(audioContext.destination);
+                osc.start(0);
+                osc.stop(audioContext.currentTime + 0.01);
 
+                audioContext.resume().then(() => {
                     if (audioContext.state === 'running' && !audioStarted) {
                         audioStarted = true;
                         if (audioBuffer) {
