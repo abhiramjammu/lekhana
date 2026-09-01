@@ -226,11 +226,16 @@
 
     <!-- Audio is handled purely via Web Audio API Buffer in JS to guarantee volume control on all devices -->
 
+    <!-- Background Watermark -->
+    <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-5 md:opacity-10">
+        <h1 class="font-script text-[12rem] md:text-[30rem] text-maroon whitespace-nowrap -rotate-12 select-none mix-blend-multiply">Lekhhana</h1>
+    </div>
+
     <!-- Music Status Indicator (Optional but helpful) -->
-    <div class="fixed top-6 right-6 z-50 text-maroon flex items-center gap-2 bg-white/70 backdrop-blur-md px-4 py-2 rounded-full shadow-md text-xs font-semibold cursor-pointer" onclick="toggleAudio()" id="music-btn">
+    <button id="music-btn" class="fixed bottom-6 right-6 z-50 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-pink-100 flex items-center gap-2 text-xs md:text-sm font-semibold text-maroon hover:bg-pink-50 transition-colors" onclick="toggleAudio()">
         <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg>
         Music Off (Tap Anywhere)
-    </div>
+    </button>
 
     <div class="texture-bg"></div>
     <div class="ambient-blob bg-pink-300 w-[50vw] h-[50vw] top-[-10%] left-[-10%]"></div>
@@ -439,7 +444,7 @@
             sourceNode.buffer = audioBuffer;
             
             gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.3; 
+            gainNode.gain.value = 0.45; // Increased to 45% for phone speakers
 
             sourceNode.connect(gainNode);
             gainNode.connect(audioContext.destination);
@@ -483,8 +488,16 @@
             if (audioStarted) return;
             
             if (audioContext && audioContext.state === 'suspended') {
-                // Must handle as a promise!
                 audioContext.resume().then(() => {
+                    // Force iOS to fully unlock by playing a silent dummy sound instantly
+                    const osc = audioContext.createOscillator();
+                    const dummyGain = audioContext.createGain();
+                    dummyGain.gain.value = 0;
+                    osc.connect(dummyGain);
+                    dummyGain.connect(audioContext.destination);
+                    osc.start(0);
+                    osc.stop(audioContext.currentTime + 0.01);
+
                     if (audioContext.state === 'running' && !audioStarted) {
                         audioStarted = true;
                         if (audioBuffer) {
