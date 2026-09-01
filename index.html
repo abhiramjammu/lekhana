@@ -597,19 +597,52 @@
         fadeUpElements.forEach(el => {
             gsap.from(el, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%" } });
         });
-        // --- AUTO SCROLL LOGIC (Hold to Pause) ---
+        // --- PAGE VISIBILITY (Pause Audio when app is minimized/locked) ---
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // User went to home screen or locked phone
+                if (audioContext && audioContext.state === 'running') {
+                    audioContext.suspend();
+                }
+            } else {
+                // User came back
+                if (audioStarted && isPlaying && audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }
+        });
+
+        // --- AUTO SCROLL LOGIC (Hold to Pause & Dynamic Speed) ---
         let autoScrollActive = false;
         let isUserHolding = false;
 
         function doAutoScroll() {
             if (autoScrollActive) {
                 if (!isUserHolding) {
-                    // Target the absolute bottom of the page to reveal the final QR code
                     const targetY = document.body.scrollHeight - window.innerHeight;
                     
-                    // Stop scrolling if we reach the target
                     if (window.scrollY < targetY - 10) {
-                        window.scrollBy(0, 1.75); // Increased 17% faster
+                        let speed = 1.75; // Reading speed
+                        
+                        // Check if the center of the screen is over a reading panel
+                        const centerY = window.innerHeight / 2;
+                        const readingPanels = document.querySelectorAll('.glass-panel, .bg-white, .full-polaroid');
+                        let isOverPanel = false;
+                        
+                        readingPanels.forEach(p => {
+                            const rect = p.getBoundingClientRect();
+                            // Expand the "reading zone" vertically by 150px so it slows down right before they read
+                            if (centerY >= rect.top - 150 && centerY <= rect.bottom + 150) {
+                                isOverPanel = true;
+                            }
+                        });
+                        
+                        // Zip fast if there is nothing to read!
+                        if (!isOverPanel) {
+                            speed = 4.5; 
+                        }
+                        
+                        window.scrollBy(0, speed);
                     } else {
                         autoScrollActive = false;
                     }
