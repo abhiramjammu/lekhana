@@ -604,12 +604,12 @@
         function doAutoScroll() {
             if (autoScrollActive) {
                 if (!isUserHolding) {
-                    const targetElement = document.getElementById('sec-4');
-                    const targetY = targetElement.getBoundingClientRect().top + window.scrollY;
+                    // Target the absolute bottom of the page to reveal the final QR code
+                    const targetY = document.body.scrollHeight - window.innerHeight;
                     
                     // Stop scrolling if we reach the target
                     if (window.scrollY < targetY - 10) {
-                        window.scrollBy(0, 1.5); // Smoothly scroll down ~1.5px per frame
+                        window.scrollBy(0, 1.6); // Increased 7% faster
                     } else {
                         autoScrollActive = false;
                     }
