@@ -224,14 +224,6 @@
 </head>
 <body class="antialiased selection:bg-rose-200 selection:text-maroon">
 
-    <!-- Welcome Overlay (Forces User Interaction for Guaranteed Audio Autoplay) -->
-    <div id="welcome-overlay" class="fixed inset-0 z-[100] bg-maroon flex flex-col items-center justify-center cursor-pointer transition-opacity duration-1000">
-        <div class="text-center animate-pulse hover:scale-105 transition-transform duration-500">
-            <h1 class="font-script text-6xl md:text-8xl text-gold mb-8">Lekhhana</h1>
-            <p class="font-serif tracking-[0.4em] text-white text-xs md:text-sm uppercase border border-gold/50 py-3 px-8 rounded-full inline-block shadow-lg bg-white/5">Tap to Open Invitation</p>
-        </div>
-    </div>
-
     <!-- Audio is handled purely via Web Audio API Buffer in JS to guarantee volume control on all devices -->
 
     <!-- Music Status Indicator (Optional but helpful) -->
@@ -530,7 +522,7 @@
         }
 
         // --- AUTOMATIC HERO ANIMATION ---
-        const heroTl = gsap.timeline({ paused: true });
+        const heroTl = gsap.timeline({ delay: 0.2 });
         
         heroTl.to("#gate-left", { x: "-100%", duration: 1.5, ease: "power2.inOut" }, 0)
               .to("#gate-right", { x: "100%", duration: 1.5, ease: "power2.inOut" }, 0)
@@ -540,30 +532,10 @@
                   { clipPath: "inset(0 0% 0 0)", duration: 2.5, ease: "power2.inOut" }, 1)
               .to("#scroll-indicator", { opacity: 0.7, duration: 1 }, 2);
 
-        // --- WELCOME OVERLAY LOGIC ---
-        document.getElementById('welcome-overlay').addEventListener('click', function(e) {
-            // 1. Force the audio to unlock and start
-            startAudioOnInteraction(e);
-            
-            // 2. Fade out overlay
-            this.style.opacity = '0';
-            setTimeout(() => {
-                this.style.display = 'none';
-                
-                // 3. Play the beautiful gate opening animation
-                heroTl.play();
-                
-                // 4. Hide gates after opening
-                setTimeout(() => {
-                    document.getElementById('gate-left').style.display = 'none';
-                    document.getElementById('gate-right').style.display = 'none';
-                }, 2000);
-                
-                // 5. Start auto-scroll timer exactly 3.5 seconds after they enter
-                setTimeout(startAutoScroll, 3500);
-                
-            }, 800); // Wait for fade out
-        });
+        setTimeout(() => {
+            document.getElementById('gate-left').style.display = 'none';
+            document.getElementById('gate-right').style.display = 'none';
+        }, 2000);
 
         // 3D Flip Animation
         gsap.set(".digit-1, .digit-2", { rotationX: -180, opacity: 0 });
@@ -629,7 +601,7 @@
         window.addEventListener('touchend', () => isUserHolding = false, {passive: true});
         
         // Start auto-scroll 3.5 seconds after page load
-        // setTimeout(startAutoScroll, 3500); // Moved to welcome overlay logic
+        setTimeout(startAutoScroll, 3500);
 
     </script>
 </body>
