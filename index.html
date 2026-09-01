@@ -564,48 +564,44 @@
         fadeUpElements.forEach(el => {
             gsap.from(el, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%" } });
         });
-        // --- AUTO SCROLL LOGIC ---
+        // --- AUTO SCROLL LOGIC (Hold to Pause) ---
         let autoScrollActive = false;
-        let autoScrollTimeout;
-        let scrollAnimation;
+        let isUserHolding = false;
 
-        function startAutoScroll() {
-            autoScrollActive = true;
-            const targetElement = document.getElementById('sec-4');
-            const targetY = targetElement.getBoundingClientRect().top + window.scrollY;
-            const duration = 25000; // 25 seconds
-            const startY = window.scrollY;
-            const distance = targetY - startY;
-            let startTime = null;
-
-            function step(timestamp) {
-                if (!autoScrollActive) return; 
-                if (!startTime) startTime = timestamp;
-                const progress = timestamp - startTime;
-                const percentage = Math.min(progress / duration, 1);
+        function doAutoScroll() {
+            if (autoScrollActive) {
+                if (!isUserHolding) {
+                    const targetElement = document.getElementById('sec-4');
+                    const targetY = targetElement.getBoundingClientRect().top + window.scrollY;
+                    
+                    // Stop scrolling if we reach the target
+                    if (window.scrollY < targetY - 10) {
+                        window.scrollBy(0, 1.2); // Smoothly scroll down ~1.2px per frame (~25 seconds total)
+                    } else {
+                        autoScrollActive = false;
+                    }
+                }
                 
-                window.scrollTo(0, startY + distance * percentage);
-                
-                if (progress < duration) {
-                    scrollAnimation = requestAnimationFrame(step);
+                if (autoScrollActive) {
+                    requestAnimationFrame(doAutoScroll);
                 }
             }
-            requestAnimationFrame(step);
         }
 
-        function cancelAutoScroll() {
-            autoScrollActive = false;
-            clearTimeout(autoScrollTimeout);
-            cancelAnimationFrame(scrollAnimation);
+        function startAutoScroll() {
+            if(autoScrollActive) return;
+            autoScrollActive = true;
+            requestAnimationFrame(doAutoScroll);
         }
         
-        // Cancel if the user tries to scroll or click manually
-        ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
-            window.addEventListener(evt, cancelAutoScroll, {passive: true});
-        });
+        // Pause scrolling when holding, resume when released
+        window.addEventListener('mousedown', () => isUserHolding = true, {passive: true});
+        window.addEventListener('mouseup', () => isUserHolding = false, {passive: true});
+        window.addEventListener('touchstart', () => isUserHolding = true, {passive: true});
+        window.addEventListener('touchend', () => isUserHolding = false, {passive: true});
         
         // Start auto-scroll 3.5 seconds after page load
-        autoScrollTimeout = setTimeout(startAutoScroll, 3500);
+        setTimeout(startAutoScroll, 3500);
 
     </script>
 </body>
