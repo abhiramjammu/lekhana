@@ -401,26 +401,30 @@
     <script>
         gsap.registerPlugin(ScrollTrigger);
 
-        // --- AUDIO LOGIC (Pure Web Audio API for Guaranteed Volume Control) ---
+        // --- AUDIO LOGIC (Robust Web Audio API) ---
         const musicBtn = document.getElementById('music-btn');
-        let audioContext;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffer;
         let sourceNode;
         let gainNode;
         let audioStarted = false;
         let isPlaying = false;
+        let pendingPlay = false;
         
-        let startOffset = 52; // Start from 52s
+        let startOffset = 52; 
         let currentPlaybackTime = 52;
         let lastStartTime = 0;
 
-        // Fetch and decode the audio file immediately in background
+        // Fetch and decode the audio file in background
         async function loadAudio() {
             try {
                 const response = await fetch('audio.mp3');
                 const arrayBuffer = await response.arrayBuffer();
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                if (pendingPlay) {
+                    playAudioBuffer();
+                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                }
             } catch (err) {
                 console.error("Failed to load audio:", err);
             }
@@ -434,7 +438,6 @@
             sourceNode = audioContext.createBufferSource();
             sourceNode.buffer = audioBuffer;
             
-            // Absolutely strictly enforce 30% volume.
             gainNode = audioContext.createGain();
             gainNode.gain.value = 0.3; 
 
@@ -447,7 +450,6 @@
             
             sourceNode.onended = () => {
                 if (isPlaying) {
-                    // Loop naturally
                     currentPlaybackTime = 52;
                     playAudioBuffer();
                 }
@@ -468,25 +470,39 @@
                 stopAudioBuffer();
                 musicBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Paused';
             } else {
-                playAudioBuffer();
-                musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                if (audioContext.state === 'suspended') audioContext.resume();
+                if (audioBuffer) {
+                    playAudioBuffer();
+                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                }
                 audioStarted = true;
             }
         }
 
         function startAudioOnInteraction() {
-            if(!audioStarted && audioBuffer) {
-                playAudioBuffer();
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            // Check if context is successfully running before declaring success
+            if (audioContext && audioContext.state === 'running' && !audioStarted) {
                 audioStarted = true;
-                musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                if (audioBuffer) {
+                    playAudioBuffer();
+                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Music Playing';
+                } else {
+                    pendingPlay = true;
+                    musicBtn.innerHTML = '<svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2zm12-3c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg> Loading...';
+                }
+                
+                ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'].forEach(evt => {
+                    window.removeEventListener(evt, startAudioOnInteraction);
+                });
             }
         }
 
-        window.addEventListener('click', startAudioOnInteraction, { once: true });
-        window.addEventListener('touchstart', startAudioOnInteraction, { once: true });
-        window.addEventListener('scroll', startAudioOnInteraction, { once: true });
-        window.addEventListener('keydown', startAudioOnInteraction, { once: true });
-        window.addEventListener('pointerdown', startAudioOnInteraction, { once: true });
+        ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'].forEach(evt => {
+            window.addEventListener(evt, startAudioOnInteraction);
+        });
 
         // --- VISUALS ---
         const petalsContainer = document.getElementById('petals-container');
@@ -548,6 +564,49 @@
         fadeUpElements.forEach(el => {
             gsap.from(el, { y: 50, opacity: 0, duration: 1.2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%" } });
         });
+        // --- AUTO SCROLL LOGIC ---
+        let autoScrollActive = false;
+        let autoScrollTimeout;
+        let scrollAnimation;
+
+        function startAutoScroll() {
+            autoScrollActive = true;
+            const targetElement = document.getElementById('sec-4');
+            const targetY = targetElement.getBoundingClientRect().top + window.scrollY;
+            const duration = 25000; // 25 seconds
+            const startY = window.scrollY;
+            const distance = targetY - startY;
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!autoScrollActive) return; 
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+                const percentage = Math.min(progress / duration, 1);
+                
+                window.scrollTo(0, startY + distance * percentage);
+                
+                if (progress < duration) {
+                    scrollAnimation = requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function cancelAutoScroll() {
+            autoScrollActive = false;
+            clearTimeout(autoScrollTimeout);
+            cancelAnimationFrame(scrollAnimation);
+        }
+        
+        // Cancel if the user tries to scroll or click manually
+        ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach(evt => {
+            window.addEventListener(evt, cancelAutoScroll, {passive: true});
+        });
+        
+        // Start auto-scroll 3.5 seconds after page load
+        autoScrollTimeout = setTimeout(startAutoScroll, 3500);
+
     </script>
 </body>
 </html>
